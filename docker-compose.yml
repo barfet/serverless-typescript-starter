@@ -1,0 +1,16 @@
+version: '2'
+
+services:
+  serverless-typescript-starter:
+    build: .
+    image: serverless-typescript-starter
+    container_name: serverless-typescript-starter
+    volumes:
+      - ./:/usr/src/app
+    command:
+      - yarn install && WEBPACK_CONFIG_TYPE=local AWS_XRAY_CONTEXT_MISSING=LOG_ERROR yarn run debug:test
+    env_file:
+      - .\.env.example
+    ports:
+      - "3000:3000"
+      - "5858:5858"

@@ -1,0 +1,12 @@
+node_modules
+.build
+npm-debug.log
+.serverless
+.npmrc
+/build
+ts-node-*
+coverage
+reports
+/.nyc_output
+npm-debug.log
+tmpModules*

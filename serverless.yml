@@ -1,0 +1,67 @@
+service: serverless-typescript-starter
+
+provider:
+  name: aws
+  runtime: nodejs6.10
+  region: ${env:AWS_REGION}
+  stage: ${env:PROJECT_ENV}
+  tracing: true
+  deploymentBucket: com.company.project.${self:provider.region}.${self:custom.stage}.deploys
+  environment:
+    PROJECT_ENV: ${env:PROJECT_ENV}
+    IDENTITY_ACCOUNT_HOST: ${env:IDENTITY_ACCOUNT_HOST}
+    IDENTITY_ACCOUNT_SERVICE_CLIENT: ${env:IDENTITY_ACCOUNT_SERVICE_CLIENT}
+    IDENTITY_ACCOUNT_SERVICE_CLIENT_SECRET: ${env:IDENTITY_ACCOUNT_SERVICE_CLIENT_SECRET}
+  iamRoleStatements:
+
+    # allow the lambda to write logs
+    - Effect: "Allow"
+      Action:
+        - "logs:CreateLogGroup"
+        - "logs:CreateLogStream"
+        - "logs:PutLogEvents"
+      Resource: 
+        - "Fn::Join": ["", ["arn:aws:logs:", {"Ref": "AWS::Region"}, ":*:*"]]
+
+    # allow xray permissions
+    - Effect: "Allow" 
+      Action:
+        - "xray:PutTraceSegments"
+        - "xray:PutTelemetryRecords"
+      Resource:
+        - "*"
+
+plugins:
+  - serverless-plugin-tracing
+  - serverless-webpack
+  - serverless-offline
+
+resources:
+  Resources:
+    pathmapping:
+      Type: AWS::ApiGateway::BasePathMapping
+      Properties:
+        BasePath: api
+        DomainName: ${env:PROJECT_DOMAIN}
+        RestApiId: 
+          Ref: ApiGatewayRestApi
+        Stage: ${self:custom.stage}
+
+custom:
+  stage: ${opt:stage, self:provider.stage}
+  region: ${opt:region, self:provider.region}
+  defaultConfigType: 'cloud'
+  webpack: './webpack/config.${env:WEBPACK_CONFIG_TYPE, self:custom.defaultConfigType}.js'
+  webpackIncludeModules: true
+  serverless-offline:
+    port: '${env:VIRTUAL_PORT}'
+    host: '0.0.0.0'
+
+functions:
+  boilerpalte:
+    handler: handler.someHandler
+
+    events:
+      - http:
+          path: publish/{event}
+          method: post
